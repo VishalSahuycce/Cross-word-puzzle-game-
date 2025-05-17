@@ -1,0 +1,110 @@
+import java.util.Scanner;
+
+public class Main {
+    static final int SIZE = 5;
+    static Character[][] board = new Character[SIZE][SIZE]; // use Character to allow null
+    
+    static final String[] words = { "CAT", "ARM", "MARK" };
+    static final String[] clues = {
+        "A small feline animal (3 letters)",
+        "A part of the body between shoulder and wrist (3 letters)",
+        "To write or indicate something (4 letters)"
+    };
+    
+    // Updated positions so words share letters properly:
+    // CAT: across at (0,0)
+    // ARM: down at (0,1)
+    // MARK: across at (2,1)
+    static final int[][] wordPositions = {
+        {0, 0, 0},  // CAT: across
+        {0, 1, 1},  // ARM: down
+        {2, 1, 0}   // MARK: across
+    };
+    
+    static boolean[] solved = new boolean[words.length];
+    
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        initBoard();
+        
+        System.out.println("Welcome to the Mini Crossword Guessing Game!");
+        
+        for (int i = 0; i < words.length; i++) {
+            while (!solved[i]) {
+                printBoard();
+                System.out.printf("Clue for word #%d: %s\n", i + 1, clues[i]);
+                System.out.printf("Enter your guess for word #%d (length %d): ", i + 1, words[i].length());
+                String guess = sc.nextLine().trim().toUpperCase();
+                
+                if (guess.equals(words[i])) {
+                    if (fillWord(i)) {
+                        System.out.println("Correct!\n");
+                        solved[i] = true;
+                    } else {
+                        System.out.println("Error: cannot fill the word due to conflicts.\n");
+                    }
+                } else {
+                    System.out.println("Incorrect, try again.\n");
+                }
+            }
+        }
+        
+        printBoard();
+        System.out.println("Congratulations! You solved all words!");
+        sc.close();
+    }
+    
+    static void initBoard() {
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                board[r][c] = null;  // empty cell = null
+            }
+        }
+        // Pre-fill hint letters at intersections or helpful positions
+        board[0][0] = 'C';  // C of CAT 
+        board[0][2] = 'T';  // T of CAT
+        board[2][1] = 'M';  // M of MARK
+    }
+    
+    static boolean fillWord(int index) {
+        int r = wordPositions[index][0];
+        int c = wordPositions[index][1];
+        int dir = wordPositions[index][2];
+        String word = words[index];
+        
+        // Check for conflicts with existing letters
+        for (int i = 0; i < word.length(); i++) {
+            int rr = (dir == 1) ? r + i : r;
+            int cc = (dir == 0) ? c + i : c;
+            Character boardChar = board[rr][cc];
+            char wordChar = word.charAt(i);
+            if (boardChar != null && boardChar != wordChar) {
+                return false; // conflict detected
+            }
+        }
+        
+        // No conflicts: fill the word into board
+        for (int i = 0; i < word.length(); i++) {
+            int rr = (dir == 1) ? r + i : r;
+            int cc = (dir == 0) ? c + i : c;
+            board[rr][cc] = word.charAt(i);
+        }
+        return true;
+    }
+    
+    static void printBoard() {
+        System.out.println("\nCurrent Board:");
+        System.out.print("   ");
+        for (int c = 0; c < SIZE; c++) System.out.print(c + "  ");
+        System.out.println();
+        
+        for (int r = 0; r < SIZE; r++) {
+            System.out.print(r + "  ");
+            for (int c = 0; c < SIZE; c++) {
+                System.out.print((board[r][c] == null ? '.' : board[r][c]) + "  ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+}
